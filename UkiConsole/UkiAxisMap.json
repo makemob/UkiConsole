@@ -1,0 +1,131 @@
+{
+    "version":1 ,
+    "axes":[
+        {
+        "name": "LeftFrontAnkle",
+        "column": "1",
+        "row":"1" 
+        },
+        {
+        "name": "LeftFrontKnee",
+        "column": "2",
+        "row":"2" 
+        },
+        {
+        "name": "LeftFrontHip",
+        "column": "3",
+        "row":"3" 
+        },
+        {
+        "name": "LeftMidAnkle",
+        "column": "1",
+        "row":"5" 
+        },
+        {
+        "name": "LeftMidKnee",
+        "column": "2",
+        "row":"5" 
+        },
+        {
+        "name": "LeftMidHip",
+        "column": "3",
+        "row":"5" 
+        },
+        {
+        "name": "LeftRearAnkle",
+        "column": "1",
+        "row":"9" 
+        },
+        {
+        "name": "LeftRearKnee",
+        "column": "2",
+        "row":"8" 
+        },
+        {
+        "name": "LeftRearHip",
+        "column": "3",
+        "row":"7" 
+        },
+        {
+        "name": "RightFrontAnkle",
+        "column": "9",
+        "row":"1" 
+        },
+        {
+        "name": "RightFrontKnee",
+        "column": "8",
+        "row":"2" 
+        },
+        {
+        "name": "RightFrontHip",
+        "column": "7",
+        "row":"3" 
+        },
+        {
+        "name": "RightMidAnkle",
+        "column": "9",
+        "row":"5" 
+        },
+        {
+        "name": "RightMidKnee",
+        "column": "8",
+        "row":"5" 
+        },
+        {
+        "name": "RightMidHip",
+        "column": "7",
+        "row":"5" 
+        },
+        {
+        "name": "RightRearAnkle",
+        "column": "9",
+        "row":"9" 
+        },
+        {
+        "name": "RightRearKnee",
+        "column": "8",
+        "row":"8" 
+        },
+        {
+        "name": "RightRearHip",
+        "column": "7",
+        "row":"7" 
+        },
+        {
+        "name": "RightWingRotate",
+        "column": "6",
+        "row":"4" 
+        },
+        {
+        "name": "RightWingRaise",
+        "column": "6",
+        "row":"5" 
+        },
+        {
+        "name": "LeftWingRotate",
+        "column": "4",
+        "row":"4" 
+        },
+        {
+        "name": "LeftWingRaise",
+        "column": "4",
+        "row":"5" 
+        },
+        {
+        "name": "Pincer1",
+        "column": "4",
+        "row":"1" 
+        },
+        {
+        "name": "Pincer2",
+        "column": "6",
+        "row":"1" 
+        },
+        {
+        "name": "Arse",
+        "column": "5",
+        "row":"9" 
+        }
+
+    ]
+}

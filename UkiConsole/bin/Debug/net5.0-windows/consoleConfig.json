@@ -1,0 +1,14 @@
+{
+  "appSettings": {
+    "defaultComPorts": {
+
+      "Right": "COM5",
+      "Left": "COM4"
+    },
+    "axisConfig": "UkiConfig.json",
+    "axisMap": "UkiAxisMap.json",
+    "cueDirectory": "C:\\Users\\jai\\Dropbox\\code\\Pelican\\UkiConsole\\scripts\\"
+
+    }
+   
+}

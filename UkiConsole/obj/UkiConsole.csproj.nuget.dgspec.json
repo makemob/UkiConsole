@@ -1,0 +1,87 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\jai\\Dropbox\\code\\Pelican\\UkiConsole\\UkiConsole\\UkiConsole.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\jai\\Dropbox\\code\\Pelican\\UkiConsole\\UkiConsole\\UkiConsole.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\jai\\Dropbox\\code\\Pelican\\UkiConsole\\UkiConsole\\UkiConsole.csproj",
+        "projectName": "UkiConsole",
+        "projectPath": "C:\\Users\\jai\\Dropbox\\code\\Pelican\\UkiConsole\\UkiConsole\\UkiConsole.csproj",
+        "packagesPath": "C:\\Users\\jai\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\jai\\Dropbox\\code\\Pelican\\UkiConsole\\UkiConsole\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\jai\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net5.0-windows7.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net5.0-windows7.0": {
+            "targetAlias": "net5.0-windows",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net5.0-windows7.0": {
+          "targetAlias": "net5.0-windows",
+          "dependencies": {
+            "CsvHelper": {
+              "target": "Package",
+              "version": "[27.1.1, )"
+            },
+            "NModbus": {
+              "target": "Package",
+              "version": "[3.0.62, )"
+            },
+            "NModbus.Serial": {
+              "target": "Package",
+              "version": "[3.0.62, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.1, )"
+            },
+            "System.IO.Ports": {
+              "target": "Package",
+              "version": "[5.0.1, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            },
+            "Microsoft.WindowsDesktop.App.WPF": {
+              "privateAssets": "none"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.400\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

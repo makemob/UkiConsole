@@ -1,0 +1,21 @@
+﻿
+Add Quit
+
+Motor max speed
+
+Displays for Com ports active/inactive
+
+
+//Now that we have 2 serial ports, make them two threads :)
+//Move to position!
+
+//ADD SECOND SERIAL PORT! But where? Modbus Manager keeps them, so I guess modbus manager. 
+//Yep. Give Modbus Manager N lists of axes, let it spin up that many ports and keep track itself.
+
+//Shadowmap for send-if-different (in? Do we even need a shadow map if we manage it in main?)
+//Enabled axes
+//Heartbeat/timeout (in UDP listener)
+//Add Calibrate
+
+
+Definitely need to start decoupling Main if we want to run headless (do we? Might be nice to run a whole show via Unity, but should probably always have the console on the UKI car itself...)

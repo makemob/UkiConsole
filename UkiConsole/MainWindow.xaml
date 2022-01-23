@@ -1,0 +1,52 @@
+﻿<Window x:Class="UkiConsole.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UkiConsole"
+        mc:Ignorable="d"
+        Title="UKI Axis Control" d:DesignWidth="945" d:DesignHeight="550" >
+    <Grid Margin="0,0,0,0">
+        <GroupBox x:Name="groupBox" Header="Axes" HorizontalAlignment="Center" Margin="0,10,0,0" VerticalAlignment="Top" Width="850
+                  " Height="410">
+            <Grid x:Name="axGrid" Margin="0,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+            </Grid>
+
+        </GroupBox>
+        <GroupBox x:Name="groupBox1" Header="Input type" HorizontalAlignment="Left" Height="45" Margin="56,450,0,0" VerticalAlignment="Top" Width="166">
+            <StackPanel Orientation="Horizontal" Margin="9,0,-9,0">
+                <RadioButton x:Name="radioButton" Content="CSV" IsChecked="True" Checked="radioButton_Checked"/>
+                <RadioButton x:Name="radioButton1" Content="UDP" Checked="radioButton_Checked"/>
+            </StackPanel>
+        </GroupBox>
+        <Button x:Name="stopbutton" Content="Stop" HorizontalAlignment="Left" Height="35" Margin="300,450,0,0" VerticalAlignment="Top" Width="79" Click="stopbutton_Click"/>
+        <Button x:Name="button" Content="Show" HorizontalAlignment="Left" Height="35" Margin="410,450,0,0" VerticalAlignment="Top" Width="79" Click="button_Click"/>
+        <Button x:Name="button1" Content="Clear" HorizontalAlignment="Left" Height="20" Margin="500,450,0,0" VerticalAlignment="Top" Width="54" Click="button1_Click"/>
+        <Button x:Name="button2" Content="Calibrate" HorizontalAlignment="Left" Height="19" Margin="844,453,0,0" VerticalAlignment="Top" Width="53" Click="button2_Click"/>
+        <Button x:Name="buttonConfig" Content="Config" HorizontalAlignment="Left" Height="19" Margin="844,480,0,0" VerticalAlignment="Top" Width="54" Click="buttonConfig_Click"/>
+
+    </Grid>
+</Window>
