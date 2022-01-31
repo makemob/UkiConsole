@@ -9,28 +9,33 @@ using System.Threading.Tasks;
 
 namespace UkiConsole
 {
-    class UDPListener
+    class UDPListener: Listener
     {
         private Socket _udpsock = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         private const int bufSize = 8 * 1024;
         private State state = new State();
         private ConcurrentQueue<RawMove> _moveOut = new();
+        private ConcurrentQueue<RawMove> _commandOut = new();
         private EndPoint epFrom = new IPEndPoint(IPAddress.Any, 0);
         private AsyncCallback recv = null;
-        private moveLoader _main; 
-        private bool heartbeat_armed = false;
-        public UDPListener(moveLoader main)
-        {
-            _main = main;
-
-        }
+        //private moveLoader _main; 
+       
+       
         public ConcurrentQueue<RawMove> MoveOut { get => _moveOut;  }
+        public ConcurrentQueue<RawMove> CommandOut { get => _commandOut; }
 
+        public UDPListener(int port, ConcurrentQueue<RawMove> Moves, ConcurrentQueue<RawMove> Control )
+        {
+            _moveOut = Moves;
+            _commandOut = Control;
+            Server(port);
+           
+        }
         public class State
         {
             public byte[] buffer = new byte[bufSize];
         }
-        public void Server( int port)
+        private void Server( int port)
         {
             IPAddress[] localIPs = Dns.GetHostAddresses(Dns.GetHostName());
             String _myaddr = "";
@@ -47,10 +52,10 @@ namespace UkiConsole
             }
             try
             {
-                _myaddr = "127.0.0.1";
+                _myaddr = "192.168.1.107";
                 _udpsock.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
                 _udpsock.Bind(new IPEndPoint(IPAddress.Parse(_myaddr), port));
-                Receive();
+                //Receive();
             }catch (Exception e)
             {
                 System.Diagnostics.Debug.WriteLine("No udp");
@@ -62,11 +67,11 @@ namespace UkiConsole
         {
             _udpsock.Close();
         }
-        private void Receive()
+        public void Receive()
         {
             _udpsock.BeginReceiveFrom(state.buffer, 0, bufSize, SocketFlags.None, ref epFrom, recv = (ar) =>
             {
-                List<String> showme = new List<String>() { "218","219", "300" };
+                List<String> hideme = new List<String>() { "240" };
                 State so = (State)ar.AsyncState;
                 int bytes = _udpsock.EndReceiveFrom(ar, ref epFrom);
                 _udpsock.BeginReceiveFrom(so.buffer, 0, bufSize, SocketFlags.None, ref epFrom, recv, so);
@@ -79,20 +84,28 @@ namespace UkiConsole
                     reg = BitConverter.ToUInt16(so.buffer, _base);
                     val = BitConverter.ToUInt16(so.buffer, _base+2);
 
-                    // _mv.Targets[BitConverter.ToUInt16(so.buffer, _base).ToString()] = BitConverter.ToUInt16(so.buffer, _base+2);
-                    // System.Diagnostics.Debug.WriteLine("UDP IN Ax: "+  _addr.ToString() + " : " + reg.ToString() +" : " + val.ToString());
+                  
+                }
+              
+                RawMove _mv = new RawMove(_addr.ToString(), reg, val);
+                
+               
+                  
+               
+                if (ModMap.ControlRegisters.Contains(reg) || ModMap.ControlAddresses.Contains(_addr))
+                {
+                    CommandOut.Enqueue(_mv);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("RECV MOVE: {0} : {1}, {2}", _addr.ToString(), reg, val);
+
+                   // System.Diagnostics.Debug.WriteLine("Move");
+
+                    MoveOut.Enqueue(_mv);
 
                 }
-               
-                    
-                RawMove _mv = new RawMove(_addr.ToString(), reg, val);
-                if (showme.Contains(reg.ToString()))
-                {
-                    System.Diagnostics.Debug.WriteLine("RECV: {0} : {1}, {2}", _addr.ToString(), reg, val);
-                }
-           
-                MoveOut.Enqueue(_mv);
-                _main.LoadUDPMove();
+                
             }, state);
 
 

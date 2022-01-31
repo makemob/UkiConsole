@@ -39,6 +39,7 @@ namespace UkiConsole
         private IModbusMaster _myStream;
         private int _nextessential = 0;
         private List<int> _essential_reg;
+        private SendWrapper _mysender ;
 
         // axes is the comport map - it gives Serial ports and the axes attached
         public ModbusManager(String comport, List<String> axes, List<int> essentials)
@@ -88,6 +89,7 @@ namespace UkiConsole
         internal ConcurrentQueue<command> Command { get => _command; }
         public ConcurrentQueue<string> MessageOut { get => _messageOut; }
         public List<int> Axes { get => _axes; }
+        public SendWrapper commsSender { get => _mysender; set => _mysender = value; }
 
         public void Connect()
         {
@@ -104,7 +106,7 @@ namespace UkiConsole
 
                 while (!Control.IsEmpty)
                 {
-
+                    
                     Control.TryDequeue(out myControl);
                     // Convert all this to delegates....
                     if (myControl.Equals("ESTOP"))
@@ -134,12 +136,19 @@ namespace UkiConsole
                 }
                 while (!Command.IsEmpty)
                 {
+                    
+
                     command cm;
                     Command.TryDequeue(out cm);
+                    System.Diagnostics.Debug.WriteLine(" MM Got {0} : {1}, {2}", cm.address, ModMap.RevMap(cm.register), cm.value);
                     if (Axes.Contains(cm.address))
                     {
                         sendRegister(cm.address, cm.register, cm.value);
-                          System.Diagnostics.Debug.WriteLine(" MM Sent {0} : {1}, {2}", cm.address, ModMap.RevMap(cm.register), cm.value);
+                      //  System.Diagnostics.Debug.WriteLine(" MM Sent {0} : {1}, {2}", cm.address, ModMap.RevMap(cm.register), cm.value);
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine(" MM NOT FOUND {0} : {1}, {2}", cm.address, ModMap.RevMap(cm.register), cm.value);
                     }
                 }
                 readEssential();
@@ -158,7 +167,8 @@ namespace UkiConsole
                 // This should always be true, but just in case....
                 if (_nextessential < Axes.Count)
                 {
-
+                    
+               
 
                     byte addr = (byte) Axes[_nextessential];
                     if (!_blacklist.Contains(addr))
@@ -174,12 +184,18 @@ namespace UkiConsole
                                 //ushort newdata = resp[0];
                                 // ushort nreg = resp[1];
                                 ushort _val = resp[0];
-                               
-                               
+
+
+                                RawMove _mv = new RawMove(addr.ToString(), reg, _val);
+
+                                if (commsSender is not null) {
+                                  
+                                    commsSender.Enqueue(_mv);
+                                }
 
                                 _result[addr.ToString()] = new int[2] { reg, _val };
                                 Results.Enqueue(_result);
-                                  //System.Diagnostics.Debug.WriteLine("It worked! {0}: {1} ({2}) : {3}",addr, ModMap.RevMap(reg), reg, _val);
+                                //  System.Diagnostics.Debug.WriteLine("It worked! {0}: {1} ({2}) : {3}",addr, ModMap.RevMap(reg), reg, _val);
                             }
                         }
                         catch (Exception e)
@@ -231,6 +247,17 @@ namespace UkiConsole
             int bufsize = 6;
             byte[] response = new byte[bufsize];
 
+            try
+            {
+                _myStream.WriteSingleRegister((byte)addr, (ushort)register, (ushort)value);
+                System.Diagnostics.Debug.WriteLine(String.Format(" SENT IN REG {0}", addr));
+
+            }
+            catch (Exception e)
+            {
+
+                System.Diagnostics.Debug.WriteLine(String.Format("{0}: {1}", addr, e.Message));
+            }
             try
             {
                 _myStream.WriteSingleRegister((byte)addr, (ushort)register, (ushort)value);

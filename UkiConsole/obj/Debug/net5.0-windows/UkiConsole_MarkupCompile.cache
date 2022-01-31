@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-C:\Users\jai\Dropbox\code\Pelican\UkiConsole\UkiConsole\obj\Debug\net5.0-windows\
+C:\Users\jai\Dropbox\code\Pelican\git\UkiConsole\UkiConsole\obj\Debug\net5.0-windows\
 UkiConsole
 none
 false
 TRACE;DEBUG;NET;NET5_0;NETCOREAPP
-C:\Users\jai\Dropbox\code\Pelican\UkiConsole\UkiConsole\App.xaml
-3-519278304
+C:\Users\jai\Dropbox\code\Pelican\git\UkiConsole\UkiConsole\App.xaml
+4-128574071
 
-12-2050077775
+20-342266345
 198-1264018002
-axisWindow.xaml;CueWindow.xaml;MainWindow.xaml;
+axisWindow.xaml;CueWindow.xaml;MainWindow.xaml;MiniWindow.xaml;
 
 False
 

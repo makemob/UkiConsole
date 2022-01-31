@@ -10,6 +10,8 @@ namespace UkiConsole
     {
         // This is entirely the wrong place for this, I think
         public static List<int> PositionRegisters = new List<int>(){ 218, 299};
+        public static List<int> ControlRegisters = new List<int>() { 208,209 };
+        public static List<int> ControlAddresses = new List<int>() { 0,240 };
 
         public static  Dictionary<int, String> EstopLabel = new()
         {

@@ -9,7 +9,7 @@ namespace UkiConsole
     interface moveLoader
     {
         public void LoadUDPMove();
-        public void LoadShowfile(CueFile cuefile);
+       // public void LoadShowfile(CueFile cuefile);
 
     }
 }

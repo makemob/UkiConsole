@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "1ouF2c+2IMb4tpkIUH0KctYhm+aJNCKXDFSU2zWyw7S2pgJDohuu8qgByKg8M23pTt//syTg2aQqEkOQ+KOu2w==",
+  "dgSpecHash": "fRVT8zhDl0mzqxhVfOxnt6YVjdbtWpWzvab57JWa0rwegq+ip8hTj/9HQ9H8MRMbYwPdKvE6ymRGVGJO0/eD1A==",
   "success": true,
-  "projectFilePath": "C:\\Users\\jai\\Dropbox\\code\\Pelican\\UkiConsole\\UkiConsole\\UkiConsole.csproj",
+  "projectFilePath": "C:\\Users\\jai\\Dropbox\\code\\Pelican\\git\\UkiConsole\\UkiConsole\\UkiConsole.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\jai\\.nuget\\packages\\csvhelper\\27.1.1\\csvhelper.27.1.1.nupkg.sha512",
     "C:\\Users\\jai\\.nuget\\packages\\microsoft.netcore.platforms\\5.0.0\\microsoft.netcore.platforms.5.0.0.nupkg.sha512",

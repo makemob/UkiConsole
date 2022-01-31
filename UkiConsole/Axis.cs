@@ -87,6 +87,13 @@ namespace UkiConsole
             RawMove Validated = new RawMove(mv.Addr, mv.Reg, ax.AdjustIncomingPosition( (int)mv.Reg,mv.Val));
             return Validated;
         }
+        public RawMove AdjustOutgoingMove(RawMove mv)
+        {
+            Axis ax = _axes[mv.Addr];
+            RawMove Validated = new RawMove(mv.Addr, mv.Reg, ax.AdjustOutgoingPosition((int)mv.Reg, mv.Val));
+            return Validated;
+            
+        }
         public bool IsEnabled(String addr)
         {
             try
@@ -309,6 +316,8 @@ namespace UkiConsole
             // This may not be a complete Register
             foreach (KeyValuePair<String, int> kvp in newReg)
             {
+                System.Diagnostics.Debug.WriteLine(kvp.Key);
+
                 Set(kvp.Key, kvp.Value);
             }
         }
@@ -374,6 +383,7 @@ namespace UkiConsole
                 val = val * EncoderScale;
 
             }
+            //SetTarget(ModMap.RevMap(reg),val);
             return val;
         }
         public int AdjustOutgoingPosition(int reg, int val)
@@ -393,9 +403,8 @@ namespace UkiConsole
         {
             // Replace this with the modbus version of AdjustPosition
 
-           // value = AdjustIncomingPosition(int.Parse(label), value);
-
-            String maxvalue = value.ToString();
+            // value = AdjustIncomingPosition(int.Parse(label), value);
+              String maxvalue = value.ToString();
             Config.TryGetValue( label.ToLower(), out maxvalue);
             if (int.Parse(maxvalue) < value)
             {

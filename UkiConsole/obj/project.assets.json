@@ -4676,11 +4676,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\jai\\Dropbox\\code\\Pelican\\UkiConsole\\UkiConsole\\UkiConsole.csproj",
+      "projectUniqueName": "C:\\Users\\jai\\Dropbox\\code\\Pelican\\git\\UkiConsole\\UkiConsole\\UkiConsole.csproj",
       "projectName": "UkiConsole",
-      "projectPath": "C:\\Users\\jai\\Dropbox\\code\\Pelican\\UkiConsole\\UkiConsole\\UkiConsole.csproj",
+      "projectPath": "C:\\Users\\jai\\Dropbox\\code\\Pelican\\git\\UkiConsole\\UkiConsole\\UkiConsole.csproj",
       "packagesPath": "C:\\Users\\jai\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\jai\\Dropbox\\code\\Pelican\\UkiConsole\\UkiConsole\\obj\\",
+      "outputPath": "C:\\Users\\jai\\Dropbox\\code\\Pelican\\git\\UkiConsole\\UkiConsole\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\jai\\AppData\\Roaming\\NuGet\\NuGet.Config",

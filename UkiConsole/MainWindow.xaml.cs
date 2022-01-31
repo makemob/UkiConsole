@@ -25,7 +25,7 @@ namespace UkiConsole
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, moveLoader
+    public partial class MainWindow : Window
     {
         private int axbuttonheight = 30;
         private int axbuttonwidth = 50;
@@ -46,7 +46,7 @@ namespace UkiConsole
         private bool _estopped = true;
         private Dictionary<String,AxisMove> _nextMove;
         private String _inputType = "CSV";
-        private UDPListener _udpListener ;
+       // private UDPListener _udpListener ;
         
         // Portmap is "left => Com3"
         private Dictionary<String, String> _portmap = new();
@@ -62,9 +62,9 @@ namespace UkiConsole
             {(int)ModMap.RegMap.MB_EXTENSION , "Pos" },
             { (int)ModMap.RegMap.MB_GOTO_POSITION , "Target" },
             {(int)ModMap.RegMap.MB_MOTOR_SPEED , "Speed" },
-            { (int)ModMap.RegMap.MB_CURRENT_LIMIT_INWARD , "Current (I)" },
-            {(int)ModMap.RegMap.MB_MOTOR_ACCEL , "Accel" },
-            {(int)ModMap.RegMap.MB_INWARD_ENDSTOP_STATE, "Micro" },
+          //  { (int)ModMap.RegMap.MB_CURRENT_LIMIT_INWARD , "Current (I)" },
+          //  {(int)ModMap.RegMap.MB_MOTOR_ACCEL , "Accel" },
+          //  {(int)ModMap.RegMap.MB_INWARD_ENDSTOP_STATE, "Micro" },
             };
        
         public MainWindow()
@@ -73,9 +73,6 @@ namespace UkiConsole
             LoadConfig();
             _axes = new AxisManager(_config["axisConfig"]);
             SetMap();
-            _udpListener = new UDPListener(this as moveLoader);
-           
-            _udpListener.Server( 9000);
             
             AddAxisButtons();
             _cueWindow = new CueWindow(this, _essentials.Keys.ToList<int>());
@@ -293,7 +290,7 @@ namespace UkiConsole
             }
 
         }
-        public void LoadUDPMove()
+       /* public void LoadUDPMove()
         {
 
             if (_inputType == "UDP")
@@ -315,31 +312,15 @@ namespace UkiConsole
                         }
                         _showrunner.RawIn.Enqueue(_udpMove);
                     }
-                     /*
-                      * So, ultimately, of course, there's no point faffing about converting the three raw numbers that we have
-                      * into the three raw numbers that we need via some arcane Axis magic.
-                    AxisMove _showmove = new AxisMove(_axes.LabelFromAddress(_udpMove.Name));
-                    _showmove.Type = "Position";
-                    foreach (KeyValuePair<String, int> kvp in _udpMove.Targets)
-                    {
-                        if (kvp.Key != "0")
-                        {
-                            System.Diagnostics.Debug.WriteLine("Setting {0}, {1} : {2}", _axes.LabelFromAddress(_udpMove.Name), ModMap.TargetRevMap[kvp.Key], kvp.Value);
-                            // THIS IS WRONG. Not sure where. Too many mappings.
-                            _showmove.setTarget(ModMap.TargetRevMap[kvp.Key], kvp.Value);
-                        }
-                    }
-                    _showmoves.Moves.Add( new Dictionary<String,AxisMove>() { { _showmove.Name, _showmove } });
-
-                    _showrunner.MoveIn.Enqueue(_showmove);
-                     */
+                     
+                     
                 }
-                //NextMove();
+                NextMove();
 
             }
 
         }
-
+        */
         public void LoadShowfile(CueFile cuefile)
         {
             if (_inputType == "CSV")
@@ -547,6 +528,7 @@ namespace UkiConsole
             
             //_udpListener.ShutDown();
             _showrunner.Control.Enqueue("SHUTDOWN");
+            
             _cueWindow.Close();
             base.OnClosing(e);
         }

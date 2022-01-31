@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace UkiConsole
 {
-    class UDPSender
+    class UDPSender : Sender
     {
 
         private Socket _udpsock = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -18,32 +18,56 @@ namespace UkiConsole
         private ConcurrentQueue<RawMove> _moveOut = new();
         private EndPoint epFrom = new IPEndPoint(IPAddress.Any, 0);
         private AsyncCallback recv = null;
-        private moveLoader _main;
+        private bool _run = true;
+        
         IPEndPoint _endpoint;
-        public UDPSender()
+        public ConcurrentQueue<RawMove> MoveOut { get => _moveOut; }
+        
+        public UDPSender(String addr, int port)
         {
            
+            try
+            {
+                IPAddress servaddr = IPAddress.Parse(addr);
 
+                _endpoint = new IPEndPoint(servaddr, port);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+            }
         }
-        public ConcurrentQueue<RawMove> MoveOut { get => _moveOut; }
-
+       
         public class State
         {
             public byte[] buffer = new byte[bufSize];
         }
-        public void Server(String addr, int port)
+       
+        public void Run()
         {
-            IPAddress servaddr = IPAddress.Parse(addr);
 
-            _endpoint = new IPEndPoint(servaddr, 10001);
-            
+            while (_run == true)
+            {
+                while(!MoveOut.IsEmpty)
+                {
+                    RawMove _mv;
+                    MoveOut.TryDequeue(out _mv);
+                    
+                    sendStatus(_mv);
+                }
+            }
         }
-
         public void ShutDown()
         {
             _udpsock.Close();
         }
-        public void sendStatus(RawMove _mv)
+
+        public void Enqueue(RawMove mv)
+        {
+           
+            MoveOut.Enqueue(mv);
+        }
+        private void sendStatus(RawMove _mv)
         {
 
            

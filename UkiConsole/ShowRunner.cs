@@ -32,10 +32,10 @@ namespace UkiConsole
         private ConcurrentQueue<List<String>> _queryOut = new();
         private ConcurrentQueue<String> _control = new ConcurrentQueue<String>();
         private ConcurrentQueue<String> _message = new ConcurrentQueue<String>();
-        private List<int> _essentials ;
+        private List<int> _essentials = new List<int>() ;
         private bool _estopped = true;
         private bool _toggled = false;
-        private UDPSender _udpSender = new UDPSender();
+       // private UDPSender _udpSender = new UDPSender();
         
         private Dictionary<String, String> _comport = new();
         public event PropertyChangedEventHandler PropertyChanged;
@@ -44,28 +44,40 @@ namespace UkiConsole
         
         public ConcurrentQueue<AxisMove> MoveIn { get => _moveIn;  }
         public ConcurrentQueue<RawMove> RawIn { get => _rawIn; }
+        private CommsManager _commsManager;
+        private string _mode = "TCP";
 
         public ConcurrentQueue<List<String>> QueryOut { get => _queryOut; }
+        public List<int> Essentials { get
+            {
+                List<int> _ess = new List<int>();
+                foreach (int i in _essentials)
+                {
+                    _ess.Add(i);
+                }
+                return _ess;
+            }
+           }
 
-
-
+        internal AxisManager Axes { get => _axes; set => _axes = value; }
 
         public ShowRunner(Dictionary<String,String> comport, AxisManager axes , List<int> essentials)
         {
-            _axes = axes;
+            Axes = axes;
             _essentials = essentials;
             _comport = comport;
             // Move this, etc....
-            _udpSender.Server("127.0.0.1", 10001);
+           // _udpSender.Server("127.0.0.1", 10001);
             // We build address lists here so ModbusManager can spin up what it
             // needs, but then we never need to worry about them again
-            Dictionary<String, List<String>> _portmap = _axes.ListAxesByPort();
+            Dictionary<String, List<String>> _portmap = Axes.ListAxesByPort();
             Dictionary<String,List<String>> _portlists = new();
 
+            
 
 
 
-            foreach(KeyValuePair<String, List<String>> plist in _portmap)
+            foreach (KeyValuePair<String, List<String>> plist in _portmap)
             {
                 _portlists[comport[plist.Key]] = new();
                 
@@ -74,20 +86,23 @@ namespace UkiConsole
                     _portlists[comport[plist.Key]].Add(ax);
                 }
             }
-
+          
             foreach (KeyValuePair<String, String> kvp in comport)
             {
                 if (_portlists.ContainsKey(kvp.Value))
                 {
                     // So after all that, here we have "left => Com3"
-                    _myManagers[kvp.Key] = new ModbusManager(kvp.Value, _portlists[kvp.Value], _essentials);
+                    _myManagers[kvp.Key] = new ModbusManager(kvp.Value, _portlists[kvp.Value], Essentials);
 
                     _myManagers[kvp.Key].Connect();
                     Thread manThread = new Thread(_myManagers[kvp.Key].Listen);
                     manThread.Start();
                 }
             }
-            
+            _commsManager = new CommsManager(_mode, this, _myManagers);
+            Thread commThread = new Thread(_commsManager.Run);
+            commThread.Start();
+
         }
         private void OnPropertyChanged(string propertyName)
         {
@@ -119,14 +134,14 @@ namespace UkiConsole
                         _myManager.Control.Enqueue(command);
                         if (command.Equals("SHUTDOWN"))
                         {
-
+                            _commsManager.ShutDown();
                             _run = false;
                         }
                         else if (command.Equals("CALIBRATE"))
                         {
-                            foreach (String ax in _axes.AddressList)
+                            foreach (String ax in Axes.AddressList)
                             {
-                                if (_axes.IsEnabled(ax))
+                                if (Axes.IsEnabled(ax))
                                 {
                                     ModbusManager.command cmd = new ModbusManager.command() { address = int.Parse(ax), register = (int)ModMap.RegMap.MB_FORCE_CALIBRATE_ENCODER, value = 0xA0A0 };
 
@@ -152,8 +167,8 @@ namespace UkiConsole
                         if (message.StartsWith("TIMEOUT"))
                         {
                             String[] res = message.Split(":");
-                            _axes.SetAxisConfig(res[1].Trim(), "enabled", "false");
-                            _axes.SetAxisAttribute(res[1].Trim(), "estop", 8);
+                            Axes.SetAxisConfig(res[1].Trim(), "enabled", "false");
+                            Axes.SetAxisAttribute(res[1].Trim(), "estop", 8);
                             System.Diagnostics.Debug.WriteLine("Set {0} timed out", res[1].Trim());
                             _queryOut.Enqueue(new List<string>() { res[1].Trim() });
                             OnPropertyChanged("Toggle");
@@ -171,9 +186,9 @@ namespace UkiConsole
                     {
                         try
                         {
-                            String addr = _axes.AddressFromLabel(mv.Name);
-                            String port = _axes.GetAxisConfig(addr, "port");
-                            if (_axes.IsEnabled(addr)) { 
+                            String addr = Axes.AddressFromLabel(mv.Name);
+                            String port = Axes.GetAxisConfig(addr, "port");
+                            if (Axes.IsEnabled(addr)) { 
                                 foreach (KeyValuePair<string, int> kvp in mv.Targets)
                                 {
                                     // reverse lookup for register names to target
@@ -199,21 +214,21 @@ namespace UkiConsole
                     {
                        // System.Diagnostics.Debug.WriteLine("Got raw");
 
-                        if (_axes.IsEnabled(_mv.Addr))
+                        if (Axes.IsEnabled(_mv.Addr))
                         {
                             // XXX Check max values and convert (max motor speed, etc)
-                            _mv = _axes.Validate(_mv);
+                            _mv = Axes.Validate(_mv);
                             System.Diagnostics.Debug.WriteLine("Showrunner - {0} :{1} :{2}", _mv.Addr, _mv.Reg, _mv.Val);
 
                             ModbusManager.command cmd = new ModbusManager.command() { address = int.Parse(_mv.Addr), register = _mv.Reg, value = _mv.Val };
 
-                            String port = _axes.GetAxisConfig(_mv.Addr, "port");
+                            String port = Axes.GetAxisConfig(_mv.Addr, "port");
                             _myManagers[port].Command.Enqueue(cmd);
                             // We then want to send actual position status as read from the Essential read.
 
-                            if (_axes.HasStatus(_mv.Addr.ToString(), _mv.Reg.ToString()))
+                            if (Axes.HasStatus(_mv.Addr.ToString(), _mv.Reg.ToString()))
                             {
-                                int val = _axes.GetAxisStatus(_mv.Addr.ToString(), _mv.Reg.ToString());
+                                int val = Axes.GetAxisStatus(_mv.Addr.ToString(), _mv.Reg.ToString());
                                 
 
                                // RawMove udpResponse = new RawMove(_mv.Addr, _mv.Reg, val);
@@ -247,15 +262,15 @@ namespace UkiConsole
                             int _reg = res.Value[0];
                             int _val = res.Value[1];
                             // Don't need the out queue, just add to the Changed property.
-                            if ((!_axes.HasStatus(res.Key, _reg.ToString())) || _axes.GetAxisStatus(res.Key, _reg.ToString()) != _val)
+                            if ((!Axes.HasStatus(res.Key, _reg.ToString())) || Axes.GetAxisStatus(res.Key, _reg.ToString()) != _val)
                             {
                                 // System.Diagnostics.Debug.WriteLine("Addr: {0},  {1} : {2}", res.Key, ModMap.RevMap(res.Value[0]), res.Value[1]);
-                                _axes.SetAxisAttribute(res.Key, _reg.ToString(), _val);
-                                if (_axes.HasAxisStatus(res.Key, _reg.ToString()))
+                                Axes.SetAxisAttribute(res.Key, _reg.ToString(), _val);
+                                if (Axes.HasAxisStatus(res.Key, _reg.ToString()))
                                 {
-                                    _val = _axes.GetAxisDisplayStatus(res.Key, _reg.ToString());
-                                    RawMove udpResponse = new RawMove(res.Key, _reg, _val);
-                                    _udpSender.sendStatus(udpResponse);
+                                    _val = Axes.GetAxisDisplayStatus(res.Key, _reg.ToString());
+                                   // RawMove udpResponse = new RawMove(res.Key, _reg, _val);
+                                  //  _udpSender.sendStatus(udpResponse);
                                 }
 
 
@@ -264,7 +279,7 @@ namespace UkiConsole
 
 
                             }
-
+       
 
 
 
@@ -275,9 +290,10 @@ namespace UkiConsole
             }
 
         }
+       
         private void ConfigAll()
         {
-            foreach (Axis ax in _axes.ListAxes())
+            foreach (Axis ax in Axes.ListAxes())
             {
                 String port = ax.GetConfig("port");
               
