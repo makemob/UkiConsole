@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel;
 
 namespace UkiConsole
 {
@@ -18,24 +19,32 @@ namespace UkiConsole
         private bool _run = true;
         private string _addr;
         private int _port;
-        private bool _toggle_UDPdat = false;
-        private short _prevVal = 0;
+        private bool _connected = false;
+        public event PropertyChangedEventHandler PropertyChanged;
+
+
         public ConcurrentQueue<RawMove> MoveOut { get => _moveOut; }
+        public bool senderConnected { get => _connected; }
 
-
-        public TCPSender(TcpClient tcpclient)
+        public TCPSender(string addr, int port)
         {
 
-           
+            _addr = addr;
+            _port = port;
             try
             {
 
-                _tcpClient = tcpclient;
-                _tcpClient.Connect("192.168.1.110", 10001);
+                _tcpClient = new TcpClient();
+                //config these
+                _tcpClient.Connect(_addr, _port);
 
-
-                _networkStream = _tcpClient.GetStream();
+                if (_tcpClient.Connected)
+                {
+                    _connected = true;
+                    OnPropertyChanged("senderConnected");
+                    _networkStream = _tcpClient.GetStream();
                     _networkStream.ReadTimeout = 2000;
+                }
                
             }
             catch (Exception ex)
@@ -45,14 +54,15 @@ namespace UkiConsole
         }
 
 
-
+        protected void OnPropertyChanged(string PropertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
+        }
         public void Run()
         {
             try
             {
 
-
-               
                 _run = true;
                 while (_run == true)
                 {
@@ -125,14 +135,18 @@ namespace UkiConsole
         }
         public void Send(byte[] message)
         {
-           // System.Diagnostics.Debug.WriteLine("TCP trying");
+            // System.Diagnostics.Debug.WriteLine("TCP trying");
 
-            
+
             if (!_tcpClient.Connected)
             {
+                if (_connected) { 
+                    _connected = false;
+                OnPropertyChanged("senderConnected");
+                }
                 System.Diagnostics.Debug.WriteLine("reconnecting");
                 _tcpClient = new TcpClient();
-                _tcpClient.Connect("192.168.1.110", 10001);
+                _tcpClient.Connect(_addr, _port);
                 _networkStream = _tcpClient.GetStream();
             }
 
@@ -143,29 +157,29 @@ namespace UkiConsole
                 _networkStream = _tcpClient.GetStream();
             }
             if (_tcpClient.Connected)
+            {
+                if (senderConnected == false)
                 {
-                    try
-                {
-                   /* if (_toggle_UDPdat)
-                    {
-                        DateTimeOffset now = (DateTimeOffset)DateTime.UtcNow;
-                        string formtime = String.Format("IN UDP SOCKET{0}", now.ToString("mm:ss:fff"));
-                        System.Diagnostics.Debug.WriteLine(formtime);
-                    }*/
+
+                    OnPropertyChanged("senderConnected");
+                    _connected = true;
+                }
+                    try{
+                  
                     _networkStream.Write(message, 0, message.Length);
                     _networkStream.Flush();
                   //  System.Diagnostics.Debug.WriteLine("TCP sending");
 
                 }
                 catch (Exception ex)
-                    {
+                {
                         System.Diagnostics.Debug.WriteLine("No TCP connection to send to");
-                   // _tcpClient.Close();
+                   
                 }
-                }
-
-
             }
+
+
+        }
         
     }
 }

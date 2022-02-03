@@ -60,7 +60,7 @@ namespace UkiConsole
             {
              { (int)ModMap.RegMap.MB_ESTOP_STATE , "Estate" },
             {(int)ModMap.RegMap.MB_EXTENSION , "Pos" },
-            { (int)ModMap.RegMap.MB_GOTO_POSITION , "Target" },
+          //  { (int)ModMap.RegMap.MB_GOTO_POSITION , "Target" },
             {(int)ModMap.RegMap.MB_MOTOR_SPEED , "Speed" },
           //  { (int)ModMap.RegMap.MB_CURRENT_LIMIT_INWARD , "Current (I)" },
           //  {(int)ModMap.RegMap.MB_MOTOR_ACCEL , "Accel" },
@@ -69,21 +69,33 @@ namespace UkiConsole
        
         public MainWindow()
         {
-            InitializeComponent();
+            
+
             LoadConfig();
             _axes = new AxisManager(_config["axisConfig"]);
+            _showrunner = new ShowRunner(_portmap, _axes, _essentials.Keys.ToList<int>());
             SetMap();
-            
+            InitializeComponent();
             AddAxisButtons();
             _cueWindow = new CueWindow(this, _essentials.Keys.ToList<int>());
             _cueWindow.Show();
             DataContext = this;
             
-             _showrunner = new ShowRunner( _portmap, _axes, _essentials.Keys.ToList<int>());
+             
             _showrunner.PropertyChanged += new PropertyChangedEventHandler(maintoggle);
             Thread showThread = new Thread(_showrunner.Listen);
             showThread.Start();
             _axes.PropertyChanged += new PropertyChangedEventHandler(Estopped);
+           // _showrunner.PropertyChanged += new PropertyChangedEventHandler(listenConn);
+        }
+        public void listenConn(object sender, EventArgs e)
+        {
+            
+
+        }
+        private void UpdateLabelColor(Label myLabel, Brush myColor)
+        {
+            myLabel.Background = myColor;
         }
 
         private void Estopped(object sender, EventArgs e)
@@ -93,18 +105,41 @@ namespace UkiConsole
             StopShow();
 
         }
-        private void maintoggle(object sender, EventArgs e)
+        private void maintoggle(object sender, PropertyChangedEventArgs e)
         {
-           // System.Diagnostics.Debug.WriteLine("toggle in main");
-            List<String> changed;
-            _showrunner.QueryOut.TryDequeue(out changed);
-            if (changed is not null)
-            {
-                foreach (String ax in changed)
+            System.Diagnostics.Debug.WriteLine(e.PropertyName.ToString());
+            if (e.PropertyName.ToString().Equals("Toggle")) {
+                // 
+                List<String> changed;
+                _showrunner.QueryOut.TryDequeue(out changed);
+                if (changed is not null)
                 {
-                   refreshButton(_axes.LabelFromAddress(ax));
-                  //  System.Diagnostics.Debug.WriteLine("Main: {0}",ax);
+                    foreach (String ax in changed)
+                    {
+                        refreshButton(_axes.LabelFromAddress(ax));
+                        //  System.Diagnostics.Debug.WriteLine("Main: {0}",ax);
+                    }
                 }
+            }else if (e.PropertyName.ToString().Equals("listenerConnected") )
+            {
+               // System.Diagnostics.Debug.WriteLine(String.Format("Listener changed conn status in Main: {0}", _showrunner.ListenerConnected));
+               
+                Brush bg = Brushes.Yellow;
+                if (_showrunner.ListenerConnected)
+                {
+                    bg = Brushes.Green;
+                }
+
+                Dispatcher.BeginInvoke(new Action<Label, Brush>(UpdateLabelColor), DispatcherPriority.Normal, listenStatus, bg);
+            }else if (e.PropertyName.ToString().Equals("senderConnected"))
+            {
+                Brush bg = Brushes.Yellow;
+                if (_showrunner.SenderConnected)
+                {
+                    bg = Brushes.Green;
+                }
+
+                Dispatcher.BeginInvoke(new Action<Label, Brush>(UpdateLabelColor), DispatcherPriority.Normal, sendStatus, bg);
             }
         }
         private void LoadConfig()
@@ -296,9 +331,7 @@ namespace UkiConsole
             if (_inputType == "UDP")
             {
 
-                _udp_armed = true; // in case it wasn't
-                _last_UDP = DateTime.Now;
-                _heartbeat.Change(5000, Timeout.Infinite);
+               
                 RawMove _udpMove;
                 
                 while (_udpListener.MoveOut.TryDequeue(out _udpMove))
@@ -470,26 +503,14 @@ namespace UkiConsole
                 }
             }
         }
-        private void NoHeart(Object stateinfo)
-        {
-            if (_udp_armed && _inputType.Equals("UDP"))
-            {
-                _udp_armed = false;
-                StopShow();
-            }
-        }
 
-        private void radioButton_Checked(object sender, RoutedEventArgs e)
+        private void mode_Changed(object sender, RoutedEventArgs e)
         {
             // Enable/Disable relevant listener
             RadioButton source = (RadioButton)sender;
             _inputType = source.Content.ToString();
-            if (_inputType.Equals("UDP"))
-            {
-                _udp_armed = true;
-                _heartbeat = new Timer(NoHeart, _heart, 5, Timeout.Infinite);
-
-            }
+            _showrunner.setMode(_inputType);
+           
             System.Diagnostics.Debug.WriteLine(_inputType);
 
         }
@@ -517,6 +538,14 @@ namespace UkiConsole
         private void CalibrateAll()
         {
             _showrunner.Control.Enqueue("CALIBRATE");
+        }
+        public void startSender(object sender, RoutedEventArgs e)
+        {
+            _showrunner.startSender();
+        }
+        public void startListener(object sender, RoutedEventArgs e)
+        {
+            _showrunner.startListener();
         }
         public void deletePopout(Button butt)
         {

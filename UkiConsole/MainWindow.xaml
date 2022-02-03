@@ -36,11 +36,27 @@
             </Grid>
 
         </GroupBox>
-        <GroupBox x:Name="groupBox1" Header="Input type" HorizontalAlignment="Left" Height="45" Margin="56,450,0,0" VerticalAlignment="Top" Width="166">
-            <StackPanel Orientation="Horizontal" Margin="9,0,-9,0">
-                <RadioButton x:Name="radioButton" Content="CSV" IsChecked="True" Checked="radioButton_Checked"/>
-                <RadioButton x:Name="radioButton1" Content="UDP" Checked="radioButton_Checked"/>
-            </StackPanel>
+        <GroupBox x:Name="groupBox1" Header="Input type" HorizontalAlignment="Left" Height="108" Margin="47,420,0,0" VerticalAlignment="Top" Width="219">
+
+            <Grid>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                    <RadioButton x:Name="radioButton" Content="CSV" IsChecked="True" Checked="mode_Changed" Width="55"/>
+                    <RadioButton x:Name="radioButton1" Content="UDP" Checked="mode_Changed" Width="54"/>
+                    <RadioButton x:Name="radioButton2" Content="TCP" Checked="mode_Changed" Width="55" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,24,0,37">
+                    <Label x:Name="listenStatus" Content="No Listener" Height="24" Width="81"/>
+                    <Button x:Name="restartListener" Content="Restart" Click="startListener" Height="23"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,53,0,0">
+                    <Label x:Name="sendStatus" Content="No Sender" Height="24" Width="81"/>
+                    <Button x:Name="restartSender" Content="Restart" Click="startSender" Height="23"/>
+                </StackPanel>
+            </Grid>
+
+
+
         </GroupBox>
         <Button x:Name="stopbutton" Content="Stop" HorizontalAlignment="Left" Height="35" Margin="300,450,0,0" VerticalAlignment="Top" Width="79" Click="stopbutton_Click"/>
         <Button x:Name="button" Content="Show" HorizontalAlignment="Left" Height="35" Margin="410,450,0,0" VerticalAlignment="Top" Width="79" Click="button_Click"/>

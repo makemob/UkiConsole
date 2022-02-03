@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel;
 
 namespace UkiConsole
 {
@@ -18,17 +19,35 @@ namespace UkiConsole
         private ConcurrentQueue<RawMove> _commandOut = new();
         private EndPoint epFrom = new IPEndPoint(IPAddress.Any, 0);
         private AsyncCallback recv = null;
+        private String _addr;
+        private int _port;
+        private bool _connected = false;
         //private moveLoader _main; 
        
        
         public ConcurrentQueue<RawMove> MoveOut { get => _moveOut;  }
         public ConcurrentQueue<RawMove> CommandOut { get => _commandOut; }
+        public event PropertyChangedEventHandler PropertyChanged;
+        public bool listenerConnected { get => _connected; }
 
-        public UDPListener(int port, ConcurrentQueue<RawMove> Moves, ConcurrentQueue<RawMove> Control )
+
+
+
+        private void checkConnection(bool state)
         {
+            if (_connected != state)
+            {
+                _connected = state;
+                if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs("listenerConnected"));
+            }
+        }
+        public UDPListener(String addr, int port, ConcurrentQueue<RawMove> Moves, ConcurrentQueue<RawMove> Control )
+        {
+            _addr = addr;
+            _port = port;
             _moveOut = Moves;
             _commandOut = Control;
-            Server(port);
+            Server(_port);
            
         }
         public class State
@@ -37,24 +56,12 @@ namespace UkiConsole
         }
         private void Server( int port)
         {
-            IPAddress[] localIPs = Dns.GetHostAddresses(Dns.GetHostName());
-            String _myaddr = "";
-            foreach (IPAddress addr in localIPs)
-            {
-                if (addr.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    if (_myaddr.Equals(""))
-                    {
-                        // really, any 
-                        _myaddr = addr.ToString();
-                    }
-                }
-            }
+           
             try
             {
-                _myaddr = "192.168.1.107";
+                //_myaddr = "192.168.1.107";
                 _udpsock.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
-                _udpsock.Bind(new IPEndPoint(IPAddress.Parse(_myaddr), port));
+                //_udpsock.Bind(new IPEndPoint(IPAddress.Parse(_addr), _port));
                 //Receive();
             }catch (Exception e)
             {
@@ -65,12 +72,18 @@ namespace UkiConsole
 
         public void ShutDown()
         {
-            _udpsock.Close();
+
+            //_udpsock.Shutdown(SocketShutdown.Both);
+           
+            _udpsock.Dispose();
         }
         public void Receive()
         {
+            _udpsock.Bind(new IPEndPoint(IPAddress.Parse(_addr), _port));
+
             _udpsock.BeginReceiveFrom(state.buffer, 0, bufSize, SocketFlags.None, ref epFrom, recv = (ar) =>
             {
+                try { 
                 List<String> hideme = new List<String>() { "240" };
                 State so = (State)ar.AsyncState;
                 int bytes = _udpsock.EndReceiveFrom(ar, ref epFrom);
@@ -88,22 +101,25 @@ namespace UkiConsole
                 }
               
                 RawMove _mv = new RawMove(_addr.ToString(), reg, val);
-                
-               
-                  
-               
-                if (ModMap.ControlRegisters.Contains(reg) || ModMap.ControlAddresses.Contains(_addr))
+
+
+
+
+                    if (ModMap.ControlRegisters.Contains(reg) || ModMap.ControlAddresses.Contains(_addr))
+                    {
+                        CommandOut.Enqueue(_mv);
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("RECV MOVE: {0} : {1}, {2}", _addr.ToString(), reg, val);
+
+                        // System.Diagnostics.Debug.WriteLine("Move");
+
+                        MoveOut.Enqueue(_mv);
+                    }
+                }catch(Exception ex)
                 {
-                    CommandOut.Enqueue(_mv);
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("RECV MOVE: {0} : {1}, {2}", _addr.ToString(), reg, val);
-
-                   // System.Diagnostics.Debug.WriteLine("Move");
-
-                    MoveOut.Enqueue(_mv);
-
+                    System.Diagnostics.Debug.WriteLine("Messy...");
                 }
                 
             }, state);

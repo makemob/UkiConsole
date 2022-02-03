@@ -40,6 +40,7 @@ namespace UkiConsole
         private int _nextessential = 0;
         private List<int> _essential_reg;
         private SendWrapper _mysender ;
+        private bool _run = true;
 
         // axes is the comport map - it gives Serial ports and the axes attached
         public ModbusManager(String comport, List<String> axes, List<int> essentials)
@@ -98,7 +99,7 @@ namespace UkiConsole
         }
         public void Listen()
         {
-            bool _run = true;
+            
             string myControl;
 
             while (_run)
@@ -140,15 +141,16 @@ namespace UkiConsole
 
                     command cm;
                     Command.TryDequeue(out cm);
-                    System.Diagnostics.Debug.WriteLine(" MM Got {0} : {1}, {2}", cm.address, ModMap.RevMap(cm.register), cm.value);
+                    // System.Diagnostics.Debug.WriteLine(" MM Got {0} : {1}, {2}", cm.address, ModMap.RevMap(cm.register), cm.value);
                     if (Axes.Contains(cm.address))
                     {
                         sendRegister(cm.address, cm.register, cm.value);
-                      //  System.Diagnostics.Debug.WriteLine(" MM Sent {0} : {1}, {2}", cm.address, ModMap.RevMap(cm.register), cm.value);
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine(" MM NOT FOUND {0} : {1}, {2}", cm.address, ModMap.RevMap(cm.register), cm.value);
+                        if (cm.register.Equals(ModMap.RegMap.MB_GOTO_POSITION))
+                        {
+                            confirmTarget(cm.address, cm.register, cm.value);
+                            //  System.Diagnostics.Debug.WriteLine(" MM Sent {0} : {1}, {2}", cm.address, ModMap.RevMap(cm.register), cm.value);
+
+                        }
                     }
                 }
                 readEssential();
@@ -157,6 +159,11 @@ namespace UkiConsole
             Control.Enqueue("STOPPED");
         }
 
+        public void ShutDown()
+        {
+            SendStopToAll();
+            _run = false;
+        }
         private void readEssential()
         {
             Dictionary<String, int[]> _result = new Dictionary<string, int[]>();
@@ -232,7 +239,7 @@ namespace UkiConsole
         }
         public void SendClearToAll()
         {
-
+            _blacklist = new List<int>();
             // System.Diagnostics.Debug.WriteLine("Clearing");
             int CLEAR = (int)ModMap.RegMap.MB_RESET_ESTOP;
             foreach (int addr in Axes)
@@ -240,12 +247,24 @@ namespace UkiConsole
                 sendRegister(addr, CLEAR, 0x5050);
 
             }
-            // Should also clear blacklist
+            
+        }
+        private void confirmTarget(int addr, int register, int value)
+        {
+            int bufsize = 6;
+            ushort[] resp = new ushort[bufsize];
+            resp = _myStream.ReadInputRegisters((byte)addr, (ushort)register, 1);
+            while (resp[0] != value)
+            {
+                sendRegister(addr, register, value);
+                resp = _myStream.ReadInputRegisters((byte)addr, (ushort)register, 1);
+                
+            }
         }
         public void sendRegister(int addr, int register, int value)
         {
-            int bufsize = 6;
-            byte[] response = new byte[bufsize];
+           
+            
 
             try
             {
@@ -256,18 +275,9 @@ namespace UkiConsole
             catch (Exception e)
             {
 
-                System.Diagnostics.Debug.WriteLine(String.Format("{0}: {1}", addr, e.Message));
+                System.Diagnostics.Debug.WriteLine(String.Format(" Could not send register {0}: {1}", addr, e.Message));
             }
-            try
-            {
-                _myStream.WriteSingleRegister((byte)addr, (ushort)register, (ushort)value);
-
-            }
-            catch (Exception e)
-            {
-
-                System.Diagnostics.Debug.WriteLine(String.Format("{0}: {1}", addr, e.Message));
-            }
+            
 
         }
         public void sendRegisters(int addr, int startAddr, List<int> values)

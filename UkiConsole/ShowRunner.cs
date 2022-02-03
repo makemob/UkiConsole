@@ -19,6 +19,7 @@ namespace UkiConsole
         // Comport -> manager instance
         private  Dictionary <String, ModbusManager> _myManagers = new();
         private AxisManager _axes;
+        private bool _run = true;
         // This is really currently a shim from GUI to Modbus
         // At some point the comms between GUI and Showrunner will become more something.
         // Probably actual axes - GUI sends the changes, Showrunner updates axes directly.
@@ -45,8 +46,14 @@ namespace UkiConsole
         public ConcurrentQueue<AxisMove> MoveIn { get => _moveIn;  }
         public ConcurrentQueue<RawMove> RawIn { get => _rawIn; }
         private CommsManager _commsManager;
-        private string _mode = "TCP";
-
+        private string _mode = "CSV";
+        private DateTime _lastHeart = DateTime.Now;
+        private bool _heart_armed = false;
+       
+        AutoResetEvent _heart = new AutoResetEvent(false);
+        private Timer _heartbeat;
+        private bool _listenerConnected;
+        private bool _senderConnected;
         public ConcurrentQueue<List<String>> QueryOut { get => _queryOut; }
         public List<int> Essentials { get
             {
@@ -60,7 +67,9 @@ namespace UkiConsole
            }
 
         internal AxisManager Axes { get => _axes; set => _axes = value; }
-
+        public bool ListenerConnected { get => _listenerConnected;  }
+        public bool SenderConnected { get => _senderConnected;  }
+       
         public ShowRunner(Dictionary<String,String> comport, AxisManager axes , List<int> essentials)
         {
             Axes = axes;
@@ -100,25 +109,54 @@ namespace UkiConsole
                 }
             }
             _commsManager = new CommsManager(_mode, this, _myManagers);
+            _commsManager.PropertyChanged += new PropertyChangedEventHandler(listenConn);
             Thread commThread = new Thread(_commsManager.Run);
             commThread.Start();
+            
+        }
+        public void listenConn(object sender, PropertyChangedEventArgs e)
+        {
+            _senderConnected = _commsManager.SenderConnected;
+            _listenerConnected = _commsManager.ListenerConnected;
+            OnPropertyChanged(e.PropertyName);
+             
+
 
         }
         private void OnPropertyChanged(string propertyName)
         {
-            PropertyChangedEventHandler eh = PropertyChanged;
-            if (eh != null)
-            {
-                var e = new PropertyChangedEventArgs(propertyName);
-                eh(this, e);
-            }
+            
+                 
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+           
         }
 
-    
+    public void ShutDown()
+        {
+           
+            _commsManager.ShutDown();
+            _run = false;
+        }
+       public void setMode(String mode)
+        {
+
+            _mode = mode;
+            _commsManager.setMode(_mode);
+            if (_mode.Equals("UDP") || _mode.Equals("TCP"))
+            {
+               // _heart_armed = true;
+                _heartbeat = new Timer(NoHeart, _heart, 5, Timeout.Infinite);
+               // Heartbeat();
+            }
+            else
+            {
+                _heart_armed = false;
+            }
+        }
     public void Listen()
         {
              
-            bool _run = true;
+            
             while (_run)
             {
                 string command;
@@ -134,8 +172,8 @@ namespace UkiConsole
                         _myManager.Control.Enqueue(command);
                         if (command.Equals("SHUTDOWN"))
                         {
-                            _commsManager.ShutDown();
-                            _run = false;
+                            ShutDown();
+                           
                         }
                         else if (command.Equals("CALIBRATE"))
                         {
@@ -243,7 +281,33 @@ namespace UkiConsole
                 
             }
         }
-       
+
+        private void NoHeart(Object stateinfo)
+        {
+            if (_heart_armed)
+            {
+                _heart_armed = false;
+                Control.Enqueue("ESTOP");
+                System.Diagnostics.Debug.WriteLine("HEARTBEAT EXPIRED");
+            }
+        }
+        public void Heartbeat()
+        {
+            _heart_armed = true; // in case it wasn't
+            _lastHeart = DateTime.Now;
+            System.Diagnostics.Debug.WriteLine("HEARTBEAT");
+            _heartbeat.Change(5000, Timeout.Infinite);
+            
+        }
+       public void startListener()
+        {
+            _commsManager.startListener();
+        }
+        public void startSender()
+        {
+            _commsManager.startSender();
+        }
+
         private void checkStatus()
         {
             Dictionary<String, int[]> _results = new Dictionary<String, int[]>();

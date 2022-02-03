@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "actuators": [
+    {
+      "name": "LeftMidAnkle",
+      "address": 6,
+      "inwardCurrentLimit": 1100,
+      "outwardCurrentLimit": 1100,
+      "acceleration": 65,
+      "mustForceCalibrate": true,
+      "enabled": true,
+      "port": "Left"
+    }
+  ]
+}

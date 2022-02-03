@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel;
 
 namespace UkiConsole
 {
@@ -19,18 +20,26 @@ namespace UkiConsole
         private EndPoint epFrom = new IPEndPoint(IPAddress.Any, 0);
         private AsyncCallback recv = null;
         private bool _run = true;
-        
+        private String _addr;
+        private int _port;
+        private bool _connected;
+        public event PropertyChangedEventHandler PropertyChanged;
+
+
         IPEndPoint _endpoint;
         public ConcurrentQueue<RawMove> MoveOut { get => _moveOut; }
-        
+        public bool senderConnected { get => _connected; set => _connected = value; }
+
         public UDPSender(String addr, int port)
         {
+            _addr = addr;
+            _port = port;
            
             try
             {
-                IPAddress servaddr = IPAddress.Parse(addr);
+                IPAddress servaddr = IPAddress.Parse(_addr);
 
-                _endpoint = new IPEndPoint(servaddr, port);
+                _endpoint = new IPEndPoint(servaddr, _port);
             }
             catch (Exception ex)
             {

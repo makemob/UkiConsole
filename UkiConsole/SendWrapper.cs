@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading;
 using System.Windows.Threading;
 using System.Threading.Tasks;
+using System.ComponentModel;
+
 
 namespace UkiConsole
 {
@@ -17,15 +19,24 @@ namespace UkiConsole
         bool _run = true;
         private Sender _networkSender;
         private AxisManager _axes;
+        private bool _connected = false;
+        public event PropertyChangedEventHandler PropertyChanged;
 
         internal Sender NetworkSender { get => _networkSender; }
+        public bool senderConnected { get => _connected;  }
 
         public SendWrapper(Sender netsender, AxisManager axes)
         {
             _networkSender = netsender;
+            _networkSender.PropertyChanged += new PropertyChangedEventHandler(connChange);
             _axes = axes;
         } 
 
+        private void connChange(object sender, PropertyChangedEventArgs e)
+        {
+            _connected = _networkSender.senderConnected;
+            PropertyChanged?.Invoke(this, e);
+        }
         public void Run()
         {
             Thread sendThread = new Thread(NetworkSender.Run);

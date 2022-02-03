@@ -1,0 +1,8 @@
+RightWingRaise_Position,RightWingRaise_Speed
+20,50
+,
+,
+0,30
+,
+,
+,
