@@ -58,10 +58,10 @@
 
 
         </GroupBox>
-        <Button x:Name="stopbutton" Content="Stop" HorizontalAlignment="Left" Height="35" Margin="300,450,0,0" VerticalAlignment="Top" Width="79" Click="stopbutton_Click"/>
+        <Button x:Name="stopbutton" Content="EStop" HorizontalAlignment="Left" Height="35" Margin="300,450,0,0" VerticalAlignment="Top" Width="79" Click="stopbutton_Click"/>
         <Button x:Name="button" Content="Show" HorizontalAlignment="Left" Height="35" Margin="410,450,0,0" VerticalAlignment="Top" Width="79" Click="button_Click"/>
-        <Button x:Name="button1" Content="Clear" HorizontalAlignment="Left" Height="20" Margin="500,450,0,0" VerticalAlignment="Top" Width="54" Click="button1_Click"/>
-        <Button x:Name="button2" Content="Calibrate" HorizontalAlignment="Left" Height="19" Margin="844,453,0,0" VerticalAlignment="Top" Width="53" Click="button2_Click"/>
+        <Button x:Name="button1" Content="Clear Estop" HorizontalAlignment="Left" Height="20" Margin="500,450,0,0" VerticalAlignment="Top" Width="54" Click="button1_Click"/>
+        <Button x:Name="button2" Content="Zero Axes" HorizontalAlignment="Left" Height="19" Margin="844,453,0,0" VerticalAlignment="Top" Width="53" Click="button2_Click"/>
         <Button x:Name="buttonConfig" Content="Config" HorizontalAlignment="Left" Height="19" Margin="844,480,0,0" VerticalAlignment="Top" Width="54" Click="buttonConfig_Click"/>
 
     </Grid>

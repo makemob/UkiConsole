@@ -93,9 +93,10 @@ namespace UkiConsole
             
 
         }
-        private void UpdateLabelColor(Label myLabel, Brush myColor)
+        private void UpdateLabel(Label myLabel, String myContent, Brush myColor)
         {
             myLabel.Background = myColor;
+            myLabel.Content = myContent;
         }
 
         private void Estopped(object sender, EventArgs e)
@@ -125,21 +126,26 @@ namespace UkiConsole
                // System.Diagnostics.Debug.WriteLine(String.Format("Listener changed conn status in Main: {0}", _showrunner.ListenerConnected));
                
                 Brush bg = Brushes.Yellow;
+                String labelContent = "No Listener";
                 if (_showrunner.ListenerConnected)
                 {
                     bg = Brushes.Green;
+                    labelContent = "Listener connected";
                 }
 
-                Dispatcher.BeginInvoke(new Action<Label, Brush>(UpdateLabelColor), DispatcherPriority.Normal, listenStatus, bg);
+                Dispatcher.BeginInvoke(new Action<Label, String, Brush>(UpdateLabel), DispatcherPriority.Normal, listenStatus, labelContent,bg);
             }else if (e.PropertyName.ToString().Equals("senderConnected"))
             {
                 Brush bg = Brushes.Yellow;
+                String labelContent = "No Sender";
                 if (_showrunner.SenderConnected)
                 {
                     bg = Brushes.Green;
+                    labelContent = "Sender connected";
+
                 }
 
-                Dispatcher.BeginInvoke(new Action<Label, Brush>(UpdateLabelColor), DispatcherPriority.Normal, sendStatus, bg);
+                Dispatcher.BeginInvoke(new Action<Label, String, Brush>(UpdateLabel), DispatcherPriority.Normal, sendStatus, labelContent, bg);
             }
         }
         private void LoadConfig()

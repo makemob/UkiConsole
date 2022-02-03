@@ -7,8 +7,8 @@
     },
     "axisConfig": "UkiConfig.json",
     "axisMap": "UkiAxisMap.json",
-    "cueDirectory": "C:\\Users\\jai\\Dropbox\\code\\Pelican\\UkiConsole\\scripts\\"
-
+    "cueDirectory": "scripts",
+    "RemoteSequencerAddress":  "192.168.1.107"
     }
    
 }

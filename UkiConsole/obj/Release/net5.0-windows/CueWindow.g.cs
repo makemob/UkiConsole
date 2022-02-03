@@ -86,7 +86,7 @@ namespace UkiConsole {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/UkiConsole_ywhoa3fl_wpftmp;component/cuewindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/UkiConsole;component/cuewindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\CueWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>UkiConsole</id>
+    <version>1.0.0</version>
+    <authors>UkiConsole</authors>
+    <description>Package Description</description>
+    <dependencies>
+      <group targetFramework="net5.0-windows7.0">
+        <dependency id="CsvHelper" version="27.1.1" exclude="Build,Analyzers" />
+        <dependency id="NModbus" version="3.0.62" exclude="Build,Analyzers" />
+        <dependency id="NModbus.Serial" version="3.0.62" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.1" exclude="Build,Analyzers" />
+        <dependency id="System.IO.Ports" version="5.0.1" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+    <frameworkReferences>
+      <group targetFramework="net5.0-windows7.0">
+        <frameworkReference name="Microsoft.WindowsDesktop.App.WPF" />
+      </group>
+    </frameworkReferences>
+  </metadata>
+  <files>
+    <file src="C:\Users\jai\Dropbox\code\Pelican\git\UkiConsole\UkiConsole\bin\Release\net5.0-windows\UkiConsole.runtimeconfig.json" target="lib\net5.0-windows7.0\UkiConsole.runtimeconfig.json" />
+    <file src="C:\Users\jai\Dropbox\code\Pelican\git\UkiConsole\UkiConsole\bin\Release\net5.0-windows\UkiConsole.dll" target="lib\net5.0-windows7.0\UkiConsole.dll" />
+  </files>
+</package>

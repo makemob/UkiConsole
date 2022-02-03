@@ -61,7 +61,7 @@ namespace UkiConsole {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/UkiConsole_ywhoa3fl_wpftmp;component/axiswindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/UkiConsole;component/axiswindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\axisWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

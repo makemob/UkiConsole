@@ -69,6 +69,7 @@ namespace UkiConsole
         public void ShutDown()
         {
             _udpsock.Close();
+            _run = false;
         }
 
         public void Enqueue(RawMove mv)

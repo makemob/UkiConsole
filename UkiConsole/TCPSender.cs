@@ -86,6 +86,7 @@ namespace UkiConsole
         public void ShutDown()
         {
             _tcpClient.Close();
+            _run = false;
         }
 
         public void Enqueue(RawMove mv)
