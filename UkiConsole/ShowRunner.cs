@@ -36,8 +36,8 @@ namespace UkiConsole
         private List<int> _essentials = new List<int>() ;
         private bool _estopped = true;
         private bool _toggled = false;
-       // private UDPSender _udpSender = new UDPSender();
-        
+        // private UDPSender _udpSender = new UDPSender();
+        private Dictionary<String, String> _mmRevMap = new();
         private Dictionary<String, String> _comport = new();
         public event PropertyChangedEventHandler PropertyChanged;
         public ConcurrentQueue<string> Control { get => _control;  }
@@ -69,7 +69,7 @@ namespace UkiConsole
         internal AxisManager Axes { get => _axes; set => _axes = value; }
         public bool ListenerConnected { get => _listenerConnected;  }
         public bool SenderConnected { get => _senderConnected;  }
-       
+        Dictionary<String, List<String>> _portlists = new();
         public ShowRunner(Dictionary<String,String> comport, AxisManager axes , List<int> essentials)
         {
             Axes = axes;
@@ -80,7 +80,7 @@ namespace UkiConsole
             // We build address lists here so ModbusManager can spin up what it
             // needs, but then we never need to worry about them again
             Dictionary<String, List<String>> _portmap = Axes.ListAxesByPort();
-            Dictionary<String,List<String>> _portlists = new();
+            
 
             
 
@@ -102,8 +102,9 @@ namespace UkiConsole
                 {
                     // So after all that, here we have "left => Com3"
                     _myManagers[kvp.Key] = new ModbusManager(kvp.Value, _portlists[kvp.Value], Essentials);
-
-                    _myManagers[kvp.Key].Connect();
+                    _myManagers[kvp.Key].PropertyChanged += new PropertyChangedEventHandler(mmConn);
+                    //_myManagers[kvp.Key].Connect();
+                    _mmRevMap[kvp.Value] = kvp.Key;
                     Thread manThread = new Thread(_myManagers[kvp.Key].Listen);
                     manThread.Start();
                 }
@@ -114,6 +115,20 @@ namespace UkiConsole
             commThread.Start();
             
         }
+        public void mmConn(object sender, PropertyChangedEventArgs e)
+        {
+            try
+            {
+                bool conn = _myManagers[_mmRevMap[e.PropertyName]].Connected;
+                System.Diagnostics.Debug.WriteLine(String.Format("Conn status for {0} : {1}", e.PropertyName, conn));
+            }
+            finally
+            {
+                System.Diagnostics.Debug.WriteLine("No idea");
+
+            }
+            OnPropertyChanged(e.PropertyName);
+        }
         public void listenConn(object sender, PropertyChangedEventArgs e)
         {
             _senderConnected = _commsManager.SenderConnected;
@@ -122,6 +137,39 @@ namespace UkiConsole
              
 
 
+        }
+        public bool portStatus(string comport)
+        {
+            return _myManagers[comport].Connected;
+        }
+        public void USBConnect(string portside, string comport)
+        {
+            try
+            {
+                _myManagers[portside].ShutDown();
+                //OnPropertyChanged(comport);
+                try { 
+                _myManagers[portside] = new ModbusManager(comport, _portlists[comport], Essentials);
+                _myManagers[portside].PropertyChanged += new PropertyChangedEventHandler(mmConn);
+               
+                _mmRevMap[comport] = portside;
+                Thread manThread = new Thread(_myManagers[portside].Listen);
+                manThread.Start();
+                OnPropertyChanged(comport);
+                }
+                catch (Exception e)
+                {
+                    System.Diagnostics.Debug.WriteLine(String.Format("Cannot reconnect: {0}", e.Message));
+
+
+                }
+            }
+            catch ( Exception e)
+            {
+                System.Diagnostics.Debug.WriteLine(String.Format("Cannot disconnect: {0}", e.Message));
+
+
+            }
         }
         private void OnPropertyChanged(string propertyName)
         {
@@ -173,7 +221,7 @@ namespace UkiConsole
                         if (command.Equals("SHUTDOWN"))
                         {
                             ShutDown();
-                           
+
                         }
                         else if (command.Equals("CALIBRATE"))
                         {
@@ -188,9 +236,25 @@ namespace UkiConsole
 
                                 }
                             }
-                        }else if (command.Equals("CONFIG"))
+                        }
+                        else if (command.Equals("CONFIG"))
                         {
                             ConfigAll();
+                        }
+                        else if (command.Equals("HOME"))
+                        {
+                            foreach (String ax in Axes.AddressList)
+                            {
+                                if (Axes.IsEnabled(ax))
+                                {
+                                    ModbusManager.command cmd = new ModbusManager.command() { address = int.Parse(ax), register = (int)ModMap.RegMap.MB_MOTOR_SETPOINT, value = -10 };
+                                    
+
+                                    _myManager.Command.Enqueue(cmd);
+                                    cmd = new ModbusManager.command() { address = int.Parse(ax), register = (int)ModMap.RegMap.MB_MOTOR_ACCEL, value = 30 };
+                                    _myManager.Command.Enqueue(cmd);
+                                }
+                            }
                         }
 
                     }

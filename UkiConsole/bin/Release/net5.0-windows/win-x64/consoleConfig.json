@@ -1,0 +1,14 @@
+{
+  "appSettings": {
+    "defaultComPorts": {
+
+      "Right": "COM5",
+      "Left": "COM3"
+    },
+    "axisConfig": "BenchtestConfig.json",
+    "axisMap": "UkiAxisMap.json",
+    "cueDirectory": "scripts",
+    "RemoteSequencerAddress":  "192.168.1.107"
+    }
+   
+}

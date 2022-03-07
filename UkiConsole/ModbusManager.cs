@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using System.IO.Ports;
 using NModbus;
 using NModbus.Serial;
+using System.ComponentModel;
+
 
 namespace UkiConsole
 {
@@ -37,53 +39,12 @@ namespace UkiConsole
         private List<int> _axes;
         private Timer miniPoll;
         private IModbusMaster _myStream;
+        private bool _connected = false;
         private int _nextessential = 0;
         private List<int> _essential_reg;
         private SendWrapper _mysender ;
         private bool _run = true;
-
-        // axes is the comport map - it gives Serial ports and the axes attached
-        public ModbusManager(String comport, List<String> axes, List<int> essentials)
-        {
-            var factory = new ModbusFactory();
-            _axes = axes.Select(s => int.Parse(s)).ToList();
-            _essential_reg = essentials;
-
-            try
-            {
-
-                SerialPort _serialPort = new SerialPort();
-                _serialPort.PortName = comport;
-                _serialPort.BaudRate = 19200;
-                _serialPort.Parity = System.IO.Ports.Parity.None;
-                _serialPort.StopBits = System.IO.Ports.StopBits.One;
-                _serialPort.ReadTimeout = 100;
-                _serialPort.WriteTimeout = 100;
-                try
-                {
-                    _serialPort.Open();
-                }
-                catch (Exception e)
-                {
-                    System.Diagnostics.Debug.WriteLine("No such comport");
-                }
-                 _myStream = factory.CreateRtuMaster(_serialPort);
-
-
-
-            }
-            catch (Exception e)
-            {
-                System.Diagnostics.Debug.WriteLine("No such comport");
-            }
-
-
-
-
-
-
-        }
-
+        public event PropertyChangedEventHandler PropertyChanged;
         public ConcurrentQueue<String> Control { get => _controlIn; }
         public ConcurrentQueue<Dictionary<String, int[]>> Results { get => _results; }
         public ConcurrentQueue<Dictionary<String, int>> Query { get => _query; }
@@ -91,19 +52,123 @@ namespace UkiConsole
         public ConcurrentQueue<string> MessageOut { get => _messageOut; }
         public List<int> Axes { get => _axes; }
         public SendWrapper commsSender { get => _mysender; set => _mysender = value; }
-
-        public void Connect()
+        public bool Connected { get => _connected; }
+        private SerialPort _serialPort;
+        private String _comport;
+        // axes is the comport map - it gives Serial ports and the axes attached
+        public ModbusManager(String comport, List<String> axes, List<int> essentials)
         {
+            var factory = new ModbusFactory();
+            _axes = axes.Select(s => int.Parse(s)).ToList();
+            _essential_reg = essentials;
+            _comport = comport;
+            try
+            {
+
+                Connect();
+                try
+                {
+                    _serialPort.Open();
+                    checkConnection(true);
+                }
+                catch (Exception e)
+                {
+                    System.Diagnostics.Debug.WriteLine("Could not connect {0} : {1}", _comport, e.Message);
+                    checkConnection(false);
+                }
+                 _myStream = factory.CreateRtuMaster(_serialPort);
+                
+
+
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Debug.WriteLine("No such comport {0} : {1}", _comport, e.Message);
+                checkConnection(false);
+            }
+
+
+
+
 
 
         }
+        protected void OnPropertyChanged(string propertyname)
+        {
+            PropertyChangedEventHandler eh = PropertyChanged;
+            if (eh != null)
+            {
+                var en = new PropertyChangedEventArgs(_comport);
+                eh(this, en);
+            }
+        }
+        private void checkConnection(bool state)
+        {
+            if (_connected != state)
+            {
+                 System.Diagnostics.Debug.WriteLine(String.Format("Changed connection: {0} : {1}", _comport, state));
+                _connected = state;
+                if (! _connected )
+                {
+                    try
+                    {
+                        Connect();
+                        
+                        System.Diagnostics.Debug.WriteLine(String.Format(" {0} Connected", _comport));
+
+                    }
+                    catch (Exception e)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Could not connect");
+                    }
+                }
+                OnPropertyChanged("mmConnected");
+
+            }
+        }
+
+        private void Connect()
+        {
+            _serialPort = new SerialPort();
+            _serialPort.PortName = _comport;
+            _serialPort.BaudRate = 19200;
+            _serialPort.Parity = System.IO.Ports.Parity.None;
+            _serialPort.StopBits = System.IO.Ports.StopBits.One;
+            _serialPort.ReadTimeout = 100;
+            _serialPort.WriteTimeout = 100;
+
+        }
+
+        public void Reconnect()
+        {
+            try
+            {
+                _serialPort.Close();
+                _serialPort.Open();
+                checkConnection(true);
+            }
+            catch (Exception e)
+            {
+                ShutDown();
+                Connect();
+                _serialPort.Open();
+                checkConnection(true);
+            }
+        }
         public void Listen()
         {
-            
+
+            OnPropertyChanged("Connected");
             string myControl;
 
             while (_run)
             {
+                
+                if (!_serialPort.IsOpen)
+                {
+                    checkConnection(false);
+                    return;
+                }
 
                 while (!Control.IsEmpty)
                 {
@@ -145,10 +210,11 @@ namespace UkiConsole
                     if (Axes.Contains(cm.address))
                     {
                         sendRegister(cm.address, cm.register, cm.value);
+                        System.Diagnostics.Debug.WriteLine(" MM Sent {0} : {1}, {2}", cm.address, ModMap.RevMap(cm.register), cm.value);
+
                         if (cm.register.Equals(ModMap.RegMap.MB_GOTO_POSITION))
                         {
                             confirmTarget(cm.address, cm.register, cm.value);
-                            //  System.Diagnostics.Debug.WriteLine(" MM Sent {0} : {1}, {2}", cm.address, ModMap.RevMap(cm.register), cm.value);
 
                         }
                     }
@@ -161,8 +227,14 @@ namespace UkiConsole
 
         public void ShutDown()
         {
+            System.Diagnostics.Debug.WriteLine("closing mm");
+
             SendStopToAll();
             _run = false;
+            _serialPort.Close();
+            _serialPort.Dispose();
+            _connected = false;
+            OnPropertyChanged("mmConnected");
         }
         private void readEssential()
         {
@@ -205,7 +277,7 @@ namespace UkiConsole
                                 //  System.Diagnostics.Debug.WriteLine("It worked! {0}: {1} ({2}) : {3}",addr, ModMap.RevMap(reg), reg, _val);
                             }
                         }
-                        catch (Exception e)
+                        catch(Exception e)
                         {
                             // Should set to disabled so we don't get constant errors
                             MessageOut.Enqueue(String.Format("TIMEOUT:{0}", addr));
@@ -263,8 +335,12 @@ namespace UkiConsole
         }
         public void sendRegister(int addr, int register, int value)
         {
-           
-            
+
+            if (!_serialPort.IsOpen)
+            {
+                checkConnection(false);
+                return;
+            }
 
             try
             {
@@ -282,6 +358,11 @@ namespace UkiConsole
         }
         public void sendRegisters(int addr, int startAddr, List<int> values)
         {
+            if (!_serialPort.IsOpen)
+            {
+                checkConnection(false);
+                return;
+            }
             List<ushort> _vals = new List<ushort>();
 
             foreach (int i in values)

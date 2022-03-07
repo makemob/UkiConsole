@@ -35,8 +35,8 @@ namespace UkiConsole
             
 
                 _run = true;
-                while (_run == true)
-                { }
+               // while (_run == true)
+               // { }
             
         }
         public void ShutDown()

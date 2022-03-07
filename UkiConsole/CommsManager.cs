@@ -337,6 +337,8 @@ namespace UkiConsole
        
         public void ShutDown()
         {
+            System.Diagnostics.Debug.WriteLine("closing comms");
+
             foreach (ModbusManager mm in _myManagers.Values)
             {
                 mm.ShutDown();

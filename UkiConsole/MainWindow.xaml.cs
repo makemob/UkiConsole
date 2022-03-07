@@ -19,7 +19,7 @@ using System.Windows.Shapes;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
+using System.IO.Ports;
 namespace UkiConsole
 {
     /// <summary>
@@ -54,8 +54,9 @@ namespace UkiConsole
         private DateTime _last_UDP = DateTime.Now;
         AutoResetEvent _heart = new AutoResetEvent(false);
         private Timer _heartbeat;
-
-        
+        private List<String> _comports = new() { "None" };
+        private Dictionary<string, string> _revPortMap = new();
+        private Dictionary<string, Dictionary<String, Object>> _usbButtonMap = new();
         private Dictionary<int, String> _essentials = new Dictionary<int, String>()
             {
              { (int)ModMap.RegMap.MB_ESTOP_STATE , "Estate" },
@@ -64,12 +65,25 @@ namespace UkiConsole
             {(int)ModMap.RegMap.MB_MOTOR_SPEED , "Speed" },
           //  { (int)ModMap.RegMap.MB_CURRENT_LIMIT_INWARD , "Current (I)" },
           //  {(int)ModMap.RegMap.MB_MOTOR_ACCEL , "Accel" },
-          //  {(int)ModMap.RegMap.MB_INWARD_ENDSTOP_STATE, "Micro" },
+            {(int)ModMap.RegMap.MB_INWARD_ENDSTOP_STATE, "Micro" },
             };
-       
+
+        public List<string> Comports { get => _comports;  }
+        public String LeftComPort { get => _portmap["left"]; set => _portmap["left"] = value; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void OnPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+        public String RightComPort { get => _portmap["right"]; set => _portmap["right"] = value; }
         public MainWindow()
         {
-            
+            Comports.AddRange(SerialPort.GetPortNames());
 
             LoadConfig();
             _axes = new AxisManager(_config["axisConfig"]);
@@ -80,19 +94,28 @@ namespace UkiConsole
             _cueWindow = new CueWindow(this, _essentials.Keys.ToList<int>());
             _cueWindow.Show();
             DataContext = this;
-            
-             
+            foreach (KeyValuePair<String, String> kvp in _portmap) {
+                _revPortMap[kvp.Value] = kvp.Key;
+                if (!Comports.Contains(kvp.Value))
+                {
+                    Comports.Add(kvp.Value);
+                }
+                    // Eh. Fix later
+                _usbButtonMap[_portmap["left"]] = new Dictionary<String, Object> {
+                    { "Label", LeftPortLabel },
+                    {"Button", LeftUSBButton }
+                    
+                };
+             }
             _showrunner.PropertyChanged += new PropertyChangedEventHandler(maintoggle);
             Thread showThread = new Thread(_showrunner.Listen);
             showThread.Start();
             _axes.PropertyChanged += new PropertyChangedEventHandler(Estopped);
-           // _showrunner.PropertyChanged += new PropertyChangedEventHandler(listenConn);
+           
+            // _showrunner.PropertyChanged += new PropertyChangedEventHandler(listenConn);
         }
-        public void listenConn(object sender, EventArgs e)
-        {
-            
 
-        }
+       
         private void UpdateLabel(Label myLabel, String myContent, Brush myColor)
         {
             myLabel.Background = myColor;
@@ -146,6 +169,20 @@ namespace UkiConsole
                 }
 
                 Dispatcher.BeginInvoke(new Action<Label, String, Brush>(UpdateLabel), DispatcherPriority.Normal, sendStatus, labelContent, bg);
+            }
+            else if (_portmap.Values.Contains(e.PropertyName.ToString()))
+            {
+                System.Diagnostics.Debug.WriteLine(String.Format("Main says change in connection for serial {0}", e.PropertyName));
+               // String labelContent = "Disconn";
+                Brush bg = Brushes.Red;
+                if (_showrunner.portStatus( _revPortMap[e.PropertyName]))
+                {
+                    bg = Brushes.Green;
+                    //labelContent = e.PropertyName;
+                }
+                
+                Dispatcher.BeginInvoke(new Action<Button, Brush>(UpdateButtonBG), DispatcherPriority.Normal, _usbButtonMap[e.PropertyName]["Button"],  bg);
+
             }
         }
         private void LoadConfig()
@@ -313,6 +350,10 @@ namespace UkiConsole
         public void UpdateButtonText(Button butt, String content)
         {
             butt.Content = content;
+        }
+        public void UpdateButtonBG(Button butt, Brush bg)
+        {
+            butt.Background = bg;
         }
         private void SetMap()
         {
@@ -536,6 +577,18 @@ namespace UkiConsole
 
             _showrunner.Control.Enqueue("CONFIG");
         }
+
+        private void buttonHome_Click(object sender, RoutedEventArgs e)
+        {
+            HomeAll();
+        }
+
+        private void HomeAll()
+        {
+
+            _showrunner.Control.Enqueue("HOME");
+        }
+
         private void button2_Click(object sender, RoutedEventArgs e)
         {
             CalibrateAll();
@@ -556,6 +609,14 @@ namespace UkiConsole
         public void deletePopout(Button butt)
         {
             popouts.Remove(butt);
+        }
+        private void ConnectComPort(object sender, RoutedEventArgs e)
+        {
+            string portside = (((Button)sender).Tag.ToString()).ToLower();
+            string port = _portmap[portside] ;
+            System.Diagnostics.Debug.WriteLine(port);
+            _showrunner.USBConnect(portside, port);
+
         }
         protected override void OnClosing(CancelEventArgs e)
         {

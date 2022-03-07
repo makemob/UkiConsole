@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="UKI Axis Control" d:DesignWidth="945" d:DesignHeight="550" >
     <Grid Margin="0,0,0,0">
-        <GroupBox x:Name="groupBox" Header="Axes" HorizontalAlignment="Center" Margin="0,10,0,0" VerticalAlignment="Top" Width="850
+        <GroupBox x:Name="groupBox" Header="Axes" HorizontalAlignment="Left" Margin="85,10,0,0" VerticalAlignment="Top" Width="850
                   " Height="410">
             <Grid x:Name="axGrid" Margin="0,0,0,0">
                 <Grid.RowDefinitions>
@@ -63,6 +63,36 @@
         <Button x:Name="button1" Content="Clear Estop" HorizontalAlignment="Left" Height="20" Margin="500,450,0,0" VerticalAlignment="Top" Width="54" Click="button1_Click"/>
         <Button x:Name="button2" Content="Zero Axes" HorizontalAlignment="Left" Height="19" Margin="844,453,0,0" VerticalAlignment="Top" Width="53" Click="button2_Click"/>
         <Button x:Name="buttonConfig" Content="Config" HorizontalAlignment="Left" Height="19" Margin="844,480,0,0" VerticalAlignment="Top" Width="54" Click="buttonConfig_Click"/>
+        <Button x:Name="buttonHome" Content="Home" HorizontalAlignment="Left" Height="19" Margin="844,500,0,0" VerticalAlignment="Top" Width="54" Click="buttonHome_Click"/>
+
+
+        <GroupBox x:Name="groupBox2" Header="USB ports" HorizontalAlignment="Left" Height="99" Margin="640,425,0,0" VerticalAlignment="Top" Width="144">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Name="LeftUSBPanel">
+                    <Label Content="Left port" Name="LeftPortLabel"/>
+                    <ComboBox  Name="LeftUSBSelect" ItemsSource = "{Binding Comports}" SelectedValue="{Binding LeftComPort, UpdateSourceTrigger=PropertyChanged}">
+
+                    </ComboBox>
+                    <Button Name="LeftUSBButton" Content="Connect" Click="ConnectComPort" Tag="Left">
+
+                    </Button>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Name="RightUSBPanel">
+                    <Label Content="Right port"/>
+
+                    <ComboBox Name="RightUSBSelect" ItemsSource = "{Binding Comports}" SelectedValue="{Binding RightComPort}">
+
+                    </ComboBox>
+                    <Button Name="RightUSBButton" Content="Connect" Click="ConnectComPort" Tag="Right">
+
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
 
     </Grid>
 </Window>

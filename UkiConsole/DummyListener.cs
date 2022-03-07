@@ -51,11 +51,11 @@ namespace UkiConsole
             // this will start the server
 
 
-            while (_run == true)   //we wait for a connection
-            {
+          //  while (_run == true)   //we wait for a connection
+          //  {
                
                    
-            }
+          //  }
            
 
         }
